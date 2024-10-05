@@ -91,17 +91,29 @@ print("Scipy implementation")
 print('Linear spline at x = 1.8:', interp1d(ti, yi, kind='linear')(1.8))
 print('Cubic spline at x = 1.8:', CubicSpline(ti, yi)(1.8))
 
-# This is a fun exercise to generate the graph.
 # Define mountain points
 mountain1_x = [0, 0.5, 1]
 mountain1_y = [0, 2, 0]
-
 mountain2_x = [0.7, 1, 1.4, 1.5, 1.6, 2, 2.3]
 mountain2_y = [0, 0.5, 1.3, 1.5, 1.3, 0.5, 0]
 
 # Green curve points
 land_x = [0, 0.5, 1, 1.5, 2.3]
 land_y = [0, 0.1, 0, 0.1, 0]
+
+# Sun's top half control points for the spline
+upper_sun_x = [1.65, 1.8, 1.95]
+upper_sun_y = [2.35, 2.7, 2.35]
+
+# Sun's bottom half control points for the spline
+lower_sun_x = [1.65, 1.8, 1.95]
+lower_sun_y = [2.35, 2, 2.35]  # Adjusted to create a mirrored lower arc
+
+# Generate waves using custom cspline
+wave_control_x = np.linspace(0, 2.3, 10)
+wave_control_y = np.array([0, 0.03, -0.02, 0.05, -0.05, 0.04, -0.03, 0.06, -0.01, 0])
+waves_x = np.linspace(0, 2.3, 500)
+waves_y = cspline(wave_control_x, wave_control_y, waves_x)
 
 # Create plot
 plt.figure(figsize=(10, 6))
@@ -121,14 +133,15 @@ land_spline = cspline(land_x, land_y, np.linspace(0, 2.3, 500))
 plt.plot(np.linspace(0, 2.3, 500), land_spline, color='lightgreen', linewidth=5, zorder=3)
 
 # Draw waves
-waves_x = np.linspace(0, 2.3, 100)
-waves_y = 0.05 * np.sin(3 * np.pi * waves_x)
 for shift in np.linspace(-0.3, -0.2, 3):
     plt.plot(waves_x, shift + waves_y, color='deepskyblue', zorder=0)
 
-# Draw sun
-circle = plt.Circle((1.8, 2.5), 0.15, color='tomato', fill=True, alpha=0.7)
-plt.gca().add_artist(circle)
+# Draw sun using cubic splines for the top half and bottom half
+upper_sun_spline = cspline(upper_sun_x, upper_sun_y, np.linspace(1.65, 1.95, 100))
+lower_sun_spline = cspline(lower_sun_x, lower_sun_y, np.linspace(1.95, 1.65, 100))
+
+plt.plot(np.linspace(1.65, 1.95, 100), upper_sun_spline, color='tomato', linewidth=3, alpha=0.7, zorder=4)
+plt.plot(np.linspace(1.65, 1.95, 100), lower_sun_spline, color='tomato', linewidth=3, alpha=0.7, zorder=4)
 
 # Set plot limits and hide axes
 plt.xlim(0, 2.3)
@@ -138,4 +151,6 @@ plt.axis('off')
 # Display plot
 plt.tight_layout()
 plt.show()
+
+# Save plot
 plt.savefig('./mountain_sun_spline.png')
